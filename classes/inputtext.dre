@@ -61,14 +61,31 @@ SOFTWARE. -->
         @sprite.value(text)
         # @updateSize() if (text != @text)
       </setter>
+      <method name="inputWidthFromWidth" args="w">
+        borderW = parseInt($(@sprite.el).css('border-left-width')) + parseInt($(@sprite.el).css('border-right-width'))
+        paddingW = parseInt($(@sprite.el).css('padding-left')) + parseInt($(@sprite.el).css('padding-right'))
+        return w - borderW - paddingW
+      </method>
+      <method name="inputHeightFromHeight" args="h">
+        borderH = parseInt($(@sprite.el).css('border-top-width')) + parseInt($(@sprite.el).css('border-bottom-width'))
+        paddingH = parseInt($(@sprite.el).css('padding-top')) + parseInt($(@sprite.el).css('padding-bottom'))
+        return h - borderH - paddingH
+      </method>
+      <method name="heightFromInputHeight" args="h">
+        borderH = parseInt($(@sprite.el).css('border-top-width')) + parseInt($(@sprite.el).css('border-bottom-width'))
+        paddingH = parseInt($(@sprite.el).css('padding-top')) + parseInt($(@sprite.el).css('padding-bottom'))
+        return h + borderH + paddingH
+      </method>
       <handler event="oninit">
         # el = @sprite.el
         # Prefer text attribute, fall back to innerHTML
         text = @text || @sprite.text()
         # clear innerHTML
         @sprite.text('')
-        @sprite.createInputtextElement(text, @multiline, @width, @height)
+        @sprite.createInputtextElement(text, @multiline, @inputWidthFromWidth(@width), @inputHeightFromHeight(@height))
         @inputElem = @sprite.el.getElementsByTagName('input')[0]
+        unless @height
+          @height = @heightFromInputHeight(parseInt($(@inputElem).css('height')))
       </handler>
       <handler event="onchange">
         return unless @replicator
@@ -84,12 +101,23 @@ SOFTWARE. -->
             newdata = false
         @replicator.updateData(newdata)
       </handler>
+      <method name="_updateInputSize">
+        console.log('_updateInputSize')
+        return unless @inputElem
+        $(@inputElem).css('height', @inputHeightFromHeight(@height));
+        $(@inputElem).css('width', @inputWidthFromWidth(@width));
+      </method>
+
       <handler event="onwidth" args="w">
-        return unless @inputElem
-        $(@inputElem).css('width', w);
+        console.log('onwidth', w)
+        @setAttribute('width', w+5)
       </handler>
-      <handler event="onheight" args="h">
+
+      <handler event="onheight">
         return unless @inputElem
-        $(@inputElem).css('height', h);
+        $(@inputElem).css('height', @inputHeightFromHeight(@height));
+        $(@inputElem).css('width', @inputWidthFromWidth(@width));
       </handler>
+
+
     </class>

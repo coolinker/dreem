@@ -53,7 +53,7 @@ SOFTWARE. -->
  *       </handler>
  *     </bitmapbutton>
  */-->
-<class name="bitmapbutton" type="coffee" clickable="true" clip="true">
+<class name="bitmapbutton" type="coffee" clickable="true" clip="true" initchildren="false">
   <!--/**
     * @attribute {String} [state="default"]
     * The currently active state.
@@ -94,6 +94,19 @@ SOFTWARE. -->
   <attribute name="_statesArray" type="json" value="null"></attribute>
   
   <handler event="oninit">
+    e = this.sprite.el
+    resourceTags = []
+    for child in e.childNodes
+      $child = $(child)
+      resourceTags.push({state:$child.attr('state'), url:$child.attr('url')}) if child.localName == 'resource'
+      
+    if resourceTags.length
+      @_srcsArray = []
+      @_statesArray = []
+      for resource in resourceTags
+        @_srcsArray.push(resource.url)
+        @_statesArray.push(resource.state)
+    
     if (!@_srcsArray)
       @_srcsArray = [@defaultsrc, @oversrc, @downsrc]
       @srcs = @_srcsArray.join(',')
@@ -107,7 +120,7 @@ SOFTWARE. -->
     @state = @_statesArray[0] if $.inArray(@state, @_statesArray) == -1
     @setImageForState(@state)
 
-    @interactive = false unless @_statesArray.join(',') == 'default,over,down'
+    @interactive = false unless @_statesArray.join(',').indexOf('default,over,down') == 0
   </handler>
   
   <handler event="onmouseover">

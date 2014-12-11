@@ -131,12 +131,12 @@
     triggerlock = null;
     Events = {
 
-<span id='Events-method-bind'>      /**
-</span>       * Binds an event to the current scope
-       * @param {String} ev the name of the event
+<span id='Events-method-register'>      /**
+</span>       * Registers one or more events with the current scope
+       * @param {String} ev the name of the event, or event names if separated by spaces.
        * @param {Function} callback called when the event is fired
        */
-      bind: function(ev, callback) {
+      register: function(ev, callback) {
         var evs, name, _base, _i, _len;
         evs = ev.split(&#39; &#39;);
         if (!(this.hasOwnProperty(&#39;events&#39;) &amp;&amp; this.events)) {
@@ -151,13 +151,13 @@
       },
 
 <span id='Events-method-one'>      /**
-</span>       * Binds an event to the current scope, automatically unbinds when the event fires
+</span>       * Registers an event with the current scope, automatically unregisters when the event fires
        * @param {String} ev the name of the event
        * @param {Function} callback called when the event is fired
        */
       one: function(ev, callback) {
-        this.bind(ev, function() {
-          this.unbind(ev, arguments.callee);
+        this.register(ev, function() {
+          this.unregister(ev, arguments.callee);
           return callback.apply(this, arguments);
         });
         return this;
@@ -198,7 +198,7 @@
        * @param {Function} callback called when the event is fired
        */
       listenTo: function(obj, ev, callback) {
-        obj.bind(ev, callback);
+        obj.register(ev, callback);
         this.listeningTo || (this.listeningTo = []);
         this.listeningTo.push({
           obj: obj,
@@ -238,7 +238,7 @@
       stopListening: function(obj, ev, callback) {
         var idx, index, listeningTo, val, _i, _j, _k, _len, _len1, _len2, _ref, _ref1, _ref2;
         if (obj) {
-          obj.unbind(ev, callback);
+          obj.unregister(ev, callback);
           _ref = [this.listeningTo, this.listeningToOnce];
           for (_i = 0, _len = _ref.length; _i &lt; _len; _i++) {
             listeningTo = _ref[_i];
@@ -262,19 +262,19 @@
           _ref1 = this.listeningTo;
           for (_k = 0, _len2 = _ref1.length; _k &lt; _len2; _k++) {
             _ref2 = _ref1[_k], obj = _ref2.obj, ev = _ref2.ev, callback = _ref2.callback;
-            obj.unbind(ev, callback);
+            obj.unregister(ev, callback);
           }
           this.listeningTo = void 0;
         }
         return this;
       },
 
-<span id='Events-method-unbind'>      /**
+<span id='Events-method-unregister'>      /**
 </span>       * Stops listening for an event on the current scope
        * @param {String} ev the name of the event
        * @param {Function} callback called when the event would have been fired
        */
-      unbind: function(ev, callback) {
+      unregister: function(ev, callback) {
         var cb, evs, i, list, name, _i, _j, _len, _len1, _ref;
         if (!ev) {
           this.events = {};
@@ -404,6 +404,12 @@
             return;
           }
           value = typemappings[type](value);
+          if (type === &#39;number&#39; &amp;&amp; isNaN(value)) {
+            value = this[name];
+            if (isNaN(value)) {
+              value = 0;
+            }
+          }
         } else if (value == null) {
           value = &#39;&#39;;
         }
@@ -896,8 +902,8 @@
          * @param {dr.node} node The dr.node that fired the event
          */
 
-<span id='dr-node-property-inited'>        /**
-</span>         * @property {Boolean} inited
+<span id='dr-node-attribute-inited'>        /**
+</span>         * @attribute {Boolean} inited
          * @readonly
          * True when this node and all its children are completely initialized
          */
@@ -978,7 +984,7 @@
             refeval = this._valueLookup(reference)();
             scope.stopListening(refeval, ev, handler.callback);
           } else {
-            scope.unbind(ev, handler.callback);
+            scope.unregister(ev, handler.callback);
           }
         }
       };
@@ -1107,7 +1113,7 @@
         for (i = _i = 0, _len = callbackbindings.length; _i &lt; _len; i = _i += 2) {
           prop = callbackbindings[i];
           scope = callbackbindings[i + 1];
-          scope.unbind(prop, callback);
+          scope.unregister(prop, callback);
         }
         this.constraints[property] = null;
       };
@@ -1133,7 +1139,7 @@
             for (_i = 0, _len = bindinglist.length; _i &lt; _len; _i++) {
               binding = bindinglist[_i];
               property = binding.property;
-              boundref.bind(property, constraint.callback);
+              boundref.register(property, constraint.callback);
               constraint.callbackbindings.push(property, boundref);
             }
           }
@@ -1160,7 +1166,7 @@
               scope.listenTo(refeval, ev, callback);
             }
           } else {
-            scope.bind(ev, callback);
+            scope.register(ev, callback);
           }
         }
         this.handlers = [];
@@ -1285,7 +1291,7 @@
         if (this.listeningTo) {
           this.stopListening();
         }
-        this.unbind();
+        this.unregister();
         if (((_ref = this.parent) != null ? _ref[this.name] : void 0) === this) {
           delete this.parent[this.name];
         }
@@ -1799,6 +1805,23 @@
        * scrolly event and a scroll event.
        */
 
+<span id='dr-view-attribute-xanchor'>      /**
+</span>       * @attribute {String/Number} [xanchor=50%]
+       * Sets the horizontal center of the view&#39;s transformations (such as rotation).  Values can be a pixel length,
+       * a percentage of total width or one of the keywords: &#39;left&#39;, &#39;center&#39;, or &#39;right&#39;
+       */
+
+<span id='dr-view-attribute-yanchor'>      /**
+</span>       * @attribute {String/Number} [yanchor=50%]
+       * Sets the vertical center of the view&#39;s transformations (such as rotation).  Values can be a pixel length,
+       * a percentage of total height or one of the keywords: &#39;top&#39;, &#39;center&#39;, or &#39;bottom&#39;
+       */
+
+<span id='dr-view-attribute-zanchor'>      /**
+</span>       * @attribute {String/Number} [zanchor=0]
+       * Sets the z-axis center of the view&#39;s transformations (such as rotation).  Values can be only a pixel length.
+       */
+
 <span id='dr-view-event-onclick'>      /**
 </span>       * @event onclick
        * Fired when this view is clicked
@@ -2086,6 +2109,12 @@
         if (this.rotation !== 0) {
           transform += &#39; rotate3d(0, 0, 1.0, &#39; + this.rotation + &#39;deg)&#39;;
         }
+        if (transform !== &#39;&#39;) {
+          this.xanchor || (this.xanchor = &quot;50%&quot;);
+          this.yanchor || (this.yanchor = &quot;50%&quot;);
+          this.zanchor || (this.zanchor = &quot;0&quot;);
+          this.sprite.setStyle(&#39;transform-origin&#39;, this.xanchor + &#39; &#39; + this.yanchor + &#39; &#39; + this.zanchor);
+        }
         this.sprite.setStyle(&#39;z-index&#39;, this.z);
         return this.sprite.setStyle(&#39;transform&#39;, transform);
       };
@@ -2112,6 +2141,24 @@
         this.z = depth;
         this.__updateTransform();
         return depth;
+      };
+
+      View.prototype.set_xanchor = function(xanchor) {
+        this.xanchor = xanchor;
+        this.__updateTransform();
+        return xanchor;
+      };
+
+      View.prototype.set_yanchor = function(yanchor) {
+        this.yanchor = yanchor;
+        this.__updateTransform();
+        return yanchor;
+      };
+
+      View.prototype.set_zanchor = function(zanchor) {
+        this.zanchor = zanchor;
+        this.__updateTransform();
+        return zanchor;
       };
 
       View.prototype.moveToFront = function() {
@@ -2767,17 +2814,19 @@
         });
       };
       findAutoIncludes = function(parentel, finalcallback) {
-        var fileloaded, filereloader, filerequests, findIncludeURLs, findMissingClasses, includedScripts, inlineclasses, jqel, loadInclude, loadIncludes, loadScript, loadqueue, scriptloading, validator;
+        var blacklist, dependencies, fileloaded, filereloader, filerequests, findIncludeURLs, findMissingClasses, includedScripts, inlineclasses, jqel, loadInclude, loadIncludes, loadScript, loadqueue, scriptloading, validator;
         jqel = $(parentel);
         includedScripts = {};
         loadqueue = [];
         scriptloading = false;
+        dependencies = [];
         loadScript = function(url, cb, error) {
           var appendScript, appendcallback;
           if (url in includedScripts) {
             return;
           }
           includedScripts[url] = true;
+          dependencies.push(url);
           if (scriptloading) {
             loadqueue.push(url, error);
             return url;
@@ -2817,6 +2866,7 @@
             return;
           }
           fileloaded[url] = el;
+          dependencies.push(url);
           prom = $.get(url);
           prom.url = url;
           prom.el = el;
@@ -2968,15 +3018,24 @@
             }
           });
         };
+        blacklist = [&#39;/primus/primus.io.js&#39;];
         filereloader = function() {
+          var paths;
+          dependencies.push(window.location.pathname);
+          dependencies.push(&#39;/layout.js&#39;);
+          paths = dependencies.filter(function(path) {
+            if (__indexOf.call(blacklist, path) &lt; 0) {
+              return true;
+            }
+          });
           return $.ajax({
             url: &#39;/watchfile/&#39;,
             datatype: &#39;text&#39;,
             data: {
-              url: window.location.pathname
+              url: paths
             },
-            success: function(data) {
-              if (data === window.location.pathname) {
+            success: function(url) {
+              if (__indexOf.call(paths, url) &gt;= 0) {
                 return window.location.reload();
               }
             }
@@ -3963,15 +4022,15 @@
         return StartEventable.__super__.constructor.apply(this, arguments);
       }
 
-      StartEventable.prototype.bind = function(ev, callback) {
-        StartEventable.__super__.bind.apply(this, arguments);
+      StartEventable.prototype.register = function(ev, callback) {
+        StartEventable.__super__.register.apply(this, arguments);
         if (this.startEventTest()) {
           return this.startEvent();
         }
       };
 
-      StartEventable.prototype.unbind = function(ev, callback) {
-        StartEventable.__super__.unbind.apply(this, arguments);
+      StartEventable.prototype.unregister = function(ev, callback) {
+        StartEventable.__super__.unregister.apply(this, arguments);
         if (!this.startEventTest()) {
           return this.stopEvent();
         }
